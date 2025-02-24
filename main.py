@@ -1,9 +1,9 @@
 import uvicorn
 
 from typing import List
-from fastapi import FastAPI, File, UploadFile
 from util.logger import logger
-from milvus.collection_router import insert_data
+from fastapi import FastAPI, File, UploadFile, Query
+from milvus.collection_router import insert_data, query, search
 
 app = FastAPI()
 
@@ -16,13 +16,26 @@ async def upload_file(collection_name: str, file: UploadFile = File(...)):
         logger.error(e)
         return {"error": str(e)}
 
-@app.get("/search_expr/")
-async def search_expr(collection_name: str, expr: str):
-    pass
+@app.get("/expr_search/")
+async def expr_search(
+    collection_name: str, 
+    expr: str = Query(example="problem_id == 1"),
+    limit: int = Query(default=1)):
+    try:
+        result = await query(collection_name, expr, limit)
+        return result
+    except Exception as e:
+        logger.error(e)
+        return {"error": str(e)}
 
 @app.post("/vector_search/")
-async def vector_search(collection_name: str, query: str):
-    pass
+async def vector_search(collection_name: str, text: str):
+    try:
+        result = await search(collection_name, text)
+        return result
+    except Exception as e:
+        logger.error(e)
+        return {"error": str(e)}
 
 if __name__ == "__main__":
     uvicorn.run("main:app", 

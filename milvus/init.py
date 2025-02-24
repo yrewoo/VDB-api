@@ -7,15 +7,12 @@ from milvus.grepp import grepp_fields, grepp_solution_fields
 from milvus.custom import fields
 
 def initialize(collection_name, fields, embed_field='embedding'):
-    try:
-        milvusdb = MilvusDB()
-        collection = milvusdb.create_collection(
-            collection_name=collection_name, 
-            fields=fields, 
-            embed_field=embed_field
-        )
-    except Exception as e:
-        logger.error(e)
+    milvusdb = MilvusDB()
+    collection = milvusdb.create_collection(
+        collection_name=collection_name, 
+        fields=fields, 
+        embed_field=embed_field
+    )
 
 if __name__ == "__main__":
     argparse = argparse.ArgumentParser()

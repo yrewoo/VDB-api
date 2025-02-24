@@ -11,9 +11,8 @@ DIMENSION = int(os.getenv("MILVUS_DIMENSION"))
 milvusdb = MilvusDB()
 
 leetcode_solution_fields = [
-    FieldSchema(name='id', dtype=DataType.INT64, is_primary=True, auto_id=True),
     FieldSchema(name='problem_id', dtype=DataType.INT64),
-    FieldSchema(name='solution_id', dtype=DataType.VARCHAR, max_length=6400),
+    FieldSchema(name='solution_id', dtype=DataType.VARCHAR, max_length=6400, is_primary=True),
     FieldSchema(name='description', dtype=DataType.VARCHAR, max_length=64000),
     FieldSchema(name='solution', dtype=DataType.VARCHAR, max_length=64000),
     FieldSchema(name='embedding', dtype=DataType.FLOAT_VECTOR, dim=DIMENSION),
