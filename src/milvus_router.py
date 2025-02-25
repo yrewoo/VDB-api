@@ -1,6 +1,5 @@
 import os
 import json
-from util.logger import logger
 
 from pymilvus import (
     connections,
@@ -10,12 +9,12 @@ from pymilvus import (
 )
 from openai import OpenAI
 from dotenv import load_dotenv
+from src.util.logger import logger
 from fastapi.encoders import jsonable_encoder
 
 
 class MilvusDB():
     def __init__(self, host=None, port=None, embedding_model=None, api_key=None):
-        """MilvusDB 인스턴스 초기화"""
         load_dotenv(override=True)
 
         self.host = host or os.getenv("MILVUS_HOST", "localhost")
@@ -34,10 +33,10 @@ class MilvusDB():
     
     def connect_collection(self, collection_name):
         try:
-            print(f"<Collection>:\n =============\n <Host:Port> {self.host}:{self.port}")
             connections.connect(host=self.host, port=self.port)
             collection = Collection(f"{collection_name}")      # Get an existing collection.
             collection.load()
+            print(f"============= <Collection: {collection_name}> Connected")
             return collection
         except Exception as e:
             logger.error(e)
@@ -46,8 +45,7 @@ class MilvusDB():
     def create_collection(self, collection_name, fields, embed_field, drop_existing=False):
         try:
             connections.connect(host=self.host, port=self.port)
-            print(f"<Collection>:\n =============\n <Host:Port> {self.host}:{self.port}")
-            print(f'<Name> {collection_name}')
+            print(f"============= <Host:Port> {self.host}:{self.port}")
             
             if drop_existing and utility.has_collection(f'{collection_name}'):
                 utility.drop_collection(f'{collection_name}')
@@ -56,7 +54,7 @@ class MilvusDB():
             collection = Collection(name=f'{collection_name}', schema=schema)
             collection.create_index(field_name=f"{embed_field}", index_params=self.index_param)
             collection.load()
-            print(f"=============\n<Collection: {collection_name}> Created")
+            print(f"============= <Collection: {collection_name}> Created")
             return collection
         except Exception as e:
             logger.error(e)
@@ -94,35 +92,33 @@ class MilvusDB():
             logger.error(e)
             raise e
 
-    def search(self, collection, data, target, top_k, output_fields):
-        # try:
-        result = {}
-        outputs = collection.search(
-            data=self.embed(data), 
-            anns_field=target, 
-            # expr=expr,
-            param=self.query_param,
-            limit=top_k,
-            output_fields= output_fields,
-        )
-        print(outputs)
-        response = []
-        for output in outputs:
-            for record in output:
-                tmp = {
-                    "id": record.id,
-                    "distance": record.distance,
-                    "entity": {}
-                }
-                for field in output_fields:
-                    tmp["entity"].update({
-                        f"{field}": jsonable_encoder(record.entity.get(field))
-                    })
-                response.append(tmp)
-    
-        result = sorted(response, key=lambda x: x['distance'])
-
-        return result
-        # except Exception as e:
-        #     logger.error(e)
-        #     raise e
+    def search(self, collection, data, target, output_fields, top_k=5, expr=None):
+        try:
+            embeddings = self.embed(data)
+            outputs = collection.search(
+                data=embeddings, 
+                anns_field=target, 
+                expr=expr,
+                param=self.query_param,
+                limit=top_k,
+                output_fields=output_fields,
+            )
+            response = []
+            for hits in outputs:
+                for hit in hits:
+                    tmp = {
+                        "id": hit.id if type(hit.id) == str else str(hit.id),
+                        "distance": hit.distance,
+                        "entity": {}
+                    }
+                    for field in output_fields:
+                        tmp["entity"].update({
+                            f"{field}": jsonable_encoder(hit.get(field))
+                        })
+                    response.append(tmp)
+        
+            response = sorted(response, key=lambda x: x['distance'])
+            return response
+        except Exception as e:
+            logger.error(e)
+            raise e

@@ -1,5 +1,4 @@
-from util.logger import logger
-from milvus.milvus_router import MilvusDB
+from src.util.logger import logger
 
 def get_existing_solution_ids(collection, check_field, is_int=False):
     """ 이미 삽입된 check_field 목록을 가져오기 """

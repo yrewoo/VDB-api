@@ -1,6 +1,5 @@
 import os
 import logging
-import uvicorn
 
 # 로그 디렉터리 생성
 LOG_DIR = "log"
