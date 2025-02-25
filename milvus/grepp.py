@@ -13,7 +13,7 @@ grepp_fields = [
     FieldSchema(name='problem_id', dtype=DataType.INT64, is_primary=True),
     FieldSchema(name='title', dtype=DataType.VARCHAR, max_length=64000),
     FieldSchema(name='partTitle', dtype=DataType.VARCHAR, max_length=64000),
-    FieldSchema(name='languages', dtype=DataType.ARRAY, element_type=DataType.VARCHAR, max_capacity=900, max_length=1000),
+    FieldSchema(name='languages', dtype=DataType.VARCHAR, max_length=1000),
     FieldSchema(name='level', dtype=DataType.INT64),
     FieldSchema(name='description', dtype=DataType.VARCHAR, max_length=64000),
     FieldSchema(name='testcases', dtype=DataType.VARCHAR, max_length=1000),
@@ -34,7 +34,7 @@ def prepare_data_array(collection_name, element, solution=None):
             [element['id']],  # problem_id
             [element['title']], 
             [element['partTitle']],
-            [element['languages']],
+            [str(element['languages'])],
             [element['level']],
             [element['description']],
             [str(element['testcases'])],

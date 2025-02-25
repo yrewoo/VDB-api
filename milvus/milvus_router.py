@@ -1,4 +1,5 @@
 import os
+import json
 from util.logger import logger
 
 from pymilvus import (
@@ -8,14 +9,19 @@ from pymilvus import (
     Collection,
 )
 from openai import OpenAI
+from dotenv import load_dotenv
+from fastapi.encoders import jsonable_encoder
+
 
 class MilvusDB():
     def __init__(self, host=None, port=None, embedding_model=None, api_key=None):
         """MilvusDB 인스턴스 초기화"""
+        load_dotenv(override=True)
+
         self.host = host or os.getenv("MILVUS_HOST", "localhost")
         self.port = port or int(os.getenv("MILVUS_PORT", 19530))
-        self.index_param = os.getenv("MILVUS_INDEX_PARAM")
-        self.query_param = os.getenv("MILVUS_QUERY_PARAM")
+        self.index_param = json.loads(os.getenv("MILVUS_INDEX_PARAM"))
+        self.query_param = json.loads(os.getenv("MILVUS_QUERY_PARAM"))
         self.embedding_model = embedding_model or os.getenv("OPENAI_EMBEDDING_MODEL")
         self.api_key = api_key or os.getenv("OPENAI_API_KEY")
 
@@ -88,36 +94,35 @@ class MilvusDB():
             logger.error(e)
             raise e
 
-    def search(self, collection, data, target, expr=None, top_k=5, output_fields=['problem_id', 'title', 'level',  'description', 'examples', 'constraints']):
-        try:
-            result = {}
-            outputs = collection.search(
-                data=self.embed(data), 
-                anns_field=target, 
-                expr=expr,
-                param=self.query_param,
-                limit=top_k,
-                output_fields= output_fields,
-            )
-            response = []
-            for output in outputs:
-                for record in output:
-                    tmp = {
-                        "id": record.id,
-                        "distance": record.distance,
-                        "entity": {}
-                    }
-                    for field in output_fields:
-                        tmp["entity"].update({
-                            f"{field}": record.get(field)
-                        })
-                    response.append(tmp)
-        
-            result = {
-                "response": sorted(response, key=lambda x: x['distance'])
-            }
+    def search(self, collection, data, target, top_k, output_fields):
+        # try:
+        result = {}
+        outputs = collection.search(
+            data=self.embed(data), 
+            anns_field=target, 
+            # expr=expr,
+            param=self.query_param,
+            limit=top_k,
+            output_fields= output_fields,
+        )
+        print(outputs)
+        response = []
+        for output in outputs:
+            for record in output:
+                tmp = {
+                    "id": record.id,
+                    "distance": record.distance,
+                    "entity": {}
+                }
+                for field in output_fields:
+                    tmp["entity"].update({
+                        f"{field}": jsonable_encoder(record.entity.get(field))
+                    })
+                response.append(tmp)
+    
+        result = sorted(response, key=lambda x: x['distance'])
 
-            return result
-        except Exception as e:
-            logger.error(e)
-            raise e
+        return result
+        # except Exception as e:
+        #     logger.error(e)
+        #     raise e

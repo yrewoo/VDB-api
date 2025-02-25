@@ -29,9 +29,9 @@ async def expr_search(
         return {"error": str(e)}
 
 @app.post("/vector_search/")
-async def vector_search(collection_name: str, text: str):
+async def vector_search(collection_name: str, text: str, limit: int):
     try:
-        result = await search(collection_name, text)
+        result = await search(collection_name, text, limit)
         return result
     except Exception as e:
         logger.error(e)
