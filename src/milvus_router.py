@@ -1,5 +1,6 @@
 import os
 import json
+import numpy as np
 
 from pymilvus import (
     connections,
@@ -64,15 +65,28 @@ class MilvusDB():
             logger.error(e)
             raise e
 
+
     def query(self, collection_name, output_fields, expr, limit=1):
         try:
             collection = self.connect_collection(collection_name=collection_name)
             result = collection.query(
-                expr = expr,
-                output_fields = output_fields,
-                limit = limit,
+                expr=expr,
+                output_fields=output_fields,
+                limit=limit,
             )
-            return result
+
+            # ✅ numpy.float32 → float 변환 함수
+            def convert_values(obj):
+                if isinstance(obj, np.float32):
+                    return float(obj)  # ✅ 변환
+                if isinstance(obj, list):
+                    return [convert_values(item) for item in obj]  # ✅ 리스트 내부 변환
+                if isinstance(obj, dict):
+                    return {key: convert_values(value) for key, value in obj.items()}  # ✅ 딕셔너리 내부 변환
+                return obj  # 기본 반환
+
+            return convert_values(result)  # ✅ 변환 적용
+
         except Exception as e:
             logger.error(e)
             raise e
