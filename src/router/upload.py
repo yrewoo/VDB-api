@@ -4,25 +4,50 @@ from src.util.logger import logger
 from src.milvus_router import MilvusDB
 from src.registry import registry
 
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, UploadFile, BackgroundTasks
 
 router = APIRouter()
-milvus_client = MilvusDB()
 registry.load_providers()
+milvus_client = MilvusDB()
 
-@router.post("/upload/")
-async def upload_file(collection_name: str, file: UploadFile = File(...)):
+upload_status = {}
+
+# ✅ 백그라운드에서 실행할 데이터 업로드 함수
+def process_upload(collection_name: str, file_content: str):
     try:
         provider = registry.get_provider(f"{collection_name}_provider")
-        print(provider)
         if not provider:
-            return {"error": "Provider not found"}
+            logger.error(f"❌ Provider {collection_name}_provider not found")
+            return
         
-        contents = json.loads(file.file.read().decode("utf-8"))
-        _ = provider.parse_data(contents)
+        upload_status[collection_name] = "processing"
+        contents = json.loads(file_content)
+        provider.parse_data(contents)
+        upload_status[collection_name] = "completed"
 
-        return {"message": "File uploaded successfully"}
+        logger.info(f"Upload completed for collection: {collection_name}")
+
+    except Exception as e:
+        logger.error(f"❌ Error in background task: {e}")
+        upload_status[collection_name] = "failed"
+
+
+@router.post("/upload/")
+async def upload_file(
+    collection_name: str, 
+    file: UploadFile = File(...),
+    background_tasks: BackgroundTasks = BackgroundTasks()):
+    try:
+        file_content = await file.read()
+        file_content = file_content.decode("utf-8")
+        background_tasks.add_task(process_upload, collection_name, file_content)
+        return {"message": "Upload started in background"}
 
     except Exception as e:
         logger.error(e)
         return {"error": str(e)}
+    
+@router.get("/upload_status/")
+async def get_upload_status(collection_name: str):
+    status = upload_status.get(collection_name, "not_started")
+    return {"collection_name": collection_name, "status": status}
