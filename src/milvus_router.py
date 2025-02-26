@@ -9,8 +9,8 @@ from pymilvus import (
 )
 from dotenv import load_dotenv
 from src.util.logger import logger
+from src.util.embedding_model import embedder
 from fastapi.encoders import jsonable_encoder
-
 
 class MilvusDB():
     def __init__(self, host=None, port=None):
@@ -77,12 +77,13 @@ class MilvusDB():
             logger.error(e)
             raise e
 
-    def search(self, collection, data, target, output_fields, top_k=5, expr=None):
+    def search(self, collection_name, data, target_field, output_fields, top_k=5, expr=None):
         try:
-            embeddings = self.embed(data)
+            collection = self.connect_collection(collection_name=collection_name)
+            embeddings = embedder.embed(data)
             outputs = collection.search(
                 data=embeddings, 
-                anns_field=target, 
+                anns_field=target_field, 
                 expr=expr,
                 param=self.query_param,
                 limit=top_k,

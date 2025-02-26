@@ -19,11 +19,11 @@ async def expr_search(
             return
         
         output_fields = provider.get_output_fields()
-        result = milvus_client.query(collection_name=collection_name, 
+        results = milvus_client.query(collection_name=collection_name, 
                                            output_fields=output_fields,
                                            expr=expr, 
                                            limit=limit)
-        return {"total": len(result), "result": result}
+        return {"total": len(results), "results": results}
     except Exception as e:
         logger.error(e)
         return {"error": str(e)}
