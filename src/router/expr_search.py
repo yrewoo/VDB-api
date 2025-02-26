@@ -1,6 +1,6 @@
+from src.registry import registry
 from src.util.logger import logger
 from src.milvus_router import MilvusDB
-from src.registry import registry
 
 from fastapi import APIRouter, Query
 
@@ -13,8 +13,17 @@ async def expr_search(
     expr: str = Query(example="problem_id == 1"),
     limit: int = Query(default=1)):
     try:
-        result = await query(collection_name, expr, limit)
-        return result
+        provider = registry.get_provider(f"{collection_name}_provider")
+        if not provider:
+            logger.error(f"❌ Provider {collection_name}_provider not found")
+            return
+        
+        output_fields = provider.get_output_fields()
+        result = milvus_client.query(collection_name=collection_name, 
+                                           output_fields=output_fields,
+                                           expr=expr, 
+                                           limit=limit)
+        return {"total": len(result), "result": result}
     except Exception as e:
         logger.error(e)
         return {"error": str(e)}

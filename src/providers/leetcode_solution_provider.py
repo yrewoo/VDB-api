@@ -26,6 +26,9 @@ class LeetCodeSolutionProvider(BaseProvider):
 
         return fields, embed_field
 
+    def get_output_fields(self):
+        return ["solution_id", "problem_id", "description", "solution"]
+
     def parse_data(self, json_data):
         collection = milvusdb.connect_collection(self.collection_name)
         existing_ids = get_existing_solution_ids(

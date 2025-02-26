@@ -13,15 +13,13 @@ from fastapi.encoders import jsonable_encoder
 
 
 class MilvusDB():
-    def __init__(self, host=None, port=None, embedding_model=None, api_key=None):
+    def __init__(self, host=None, port=None):
         load_dotenv(override=True)
 
         self.host = host or os.getenv("MILVUS_HOST", "localhost")
         self.port = port or int(os.getenv("MILVUS_PORT", 19530))
         self.index_param = json.loads(os.getenv("MILVUS_INDEX_PARAM"))
         self.query_param = json.loads(os.getenv("MILVUS_QUERY_PARAM"))
-        self.embedding_model = embedding_model or os.getenv("OPENAI_EMBEDDING_MODEL")
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
 
     def list_collections(self):
         try:
@@ -66,9 +64,9 @@ class MilvusDB():
             logger.error(e)
             raise e
 
-    def query(self, collection, fields, expr, limit=1):
+    def query(self, collection_name, output_fields, expr, limit=1):
         try:
-            output_fields = fields
+            collection = self.connect_collection(collection_name=collection_name)
             result = collection.query(
                 expr = expr,
                 output_fields = output_fields,

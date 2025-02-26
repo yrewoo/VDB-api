@@ -10,5 +10,9 @@ class BaseProvider(ABC):
         pass
 
     @abstractmethod
+    def get_output_fields(self):
+        pass
+    
+    @abstractmethod
     def parse_data(self, json_data):
         pass

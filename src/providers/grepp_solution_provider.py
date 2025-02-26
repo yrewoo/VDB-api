@@ -26,6 +26,9 @@ class GreppSolutionProvider(BaseProvider):
         embed_field = 'embedding'
         return fields, embed_field
 
+    def get_output_fields(self):
+        return ["solution_id", "problem_id", "language", "code"]
+
     def parse_data(self, json_data):
         collection = milvusdb.connect_collection(self.collection_name)
         data = json_data['challenges']
