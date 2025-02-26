@@ -1,12 +1,11 @@
-import os
-from tqdm import tqdm
+# Grepp Solution Provider
 
+from tqdm import tqdm
 from src.config import DIMENSION
 from src.milvus_router import MilvusDB
 from pymilvus import FieldSchema, DataType
 from src.util.embedding_model import embedder
 from src.providers.base_provider import BaseProvider
-from src.util.token_cutter import truncate_to_tokens
 from src.util.existing_checker import get_existing_solution_ids
 
 milvusdb = MilvusDB()
@@ -50,7 +49,7 @@ class GreppSolutionProvider(BaseProvider):
 
                     pbar.set_description(f"Embedding {solution_id}")
                     merged_content = description + solution['code']
-                    cut_content = truncate_to_tokens(merged_content)  # 최대 토큰 길이로 자르기
+                    cut_content = embedder.truncate_to_tokens(merged_content)  # 최대 토큰 길이로 자르기
                     array_data = [
                         [solution['id']],           # solution_id
                         [solution['challengeId']],  # problem_id

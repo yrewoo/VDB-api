@@ -1,6 +1,6 @@
-import os
-from tqdm import tqdm
+# Grepp Provider
 
+from tqdm import tqdm
 from src.config import DIMENSION
 from src.milvus_router import MilvusDB
 from pymilvus import FieldSchema, DataType

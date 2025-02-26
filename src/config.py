@@ -14,6 +14,12 @@ MODEL_DIMENSIONS = {
     "sentence-transformers/all-MiniLM-L12-v2": 384
 }
 
+MAX_TOKENS = {
+    "text-embedding-3-small": 8192,
+    "sentence-transformers/all-mpnet-base-v2": 512,
+    "sentence-transformers/all-MiniLM-L12-v2": 256
+}
+
 # 🔹 선택한 모델에 따른 차원 자동 설정
 DIMENSION = MODEL_DIMENSIONS.get(EMBEDDING_MODEL)
 

@@ -1,4 +1,4 @@
-# Leetcode Solution Provider
+# Github Provider
 
 from tqdm import tqdm
 from src.config import DIMENSION
@@ -10,52 +10,54 @@ from src.util.existing_checker import get_existing_solution_ids
 
 milvusdb = MilvusDB()
 
-class LeetCodeSolutionProvider(BaseProvider):
+
+class GithubProvider(BaseProvider):
     def __init__(self):
-        super().__init__(collection_name="leetcode_solution", uid_field="solution_id")
+        super().__init__(collection_name="github", uid_field="file_name")
         
     def get_schema(self):
         fields = [
-            FieldSchema(name='solution_id', dtype=DataType.VARCHAR, max_length=6400, is_primary=True),
-            FieldSchema(name='problem_id', dtype=DataType.INT64),
-            FieldSchema(name='description', dtype=DataType.VARCHAR, max_length=64000),
-            FieldSchema(name='solution', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='file_name', dtype=DataType.VARCHAR, max_length=10000, is_primary=True),
+            FieldSchema(name='line_count', dtype=DataType.INT64),
+            FieldSchema(name='mark', dtype=DataType.FLOAT),
+            FieldSchema(name='code', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='query', dtype=DataType.VARCHAR, max_length=64000),
             FieldSchema(name='embedding', dtype=DataType.FLOAT_VECTOR, dim=DIMENSION),
         ]
         embed_field = 'embedding'
-
         return fields, embed_field
 
     def get_output_fields(self):
-        return ["solution_id", "problem_id", "description", "solution"]
-
+        return ["file_name", "line_count", "mark", "code", "query"]
+    
     def parse_data(self, json_data):
         collection = milvusdb.connect_collection(self.collection_name)
         existing_ids = get_existing_solution_ids(
             collection, 
             self.uid_field, 
             is_int=False)
-
+        
         with tqdm(total=len(json_data)) as pbar:
             for element in json_data:
-                if element["solution_id"] in existing_ids:
-                    pbar.set_description(f"Skipping {element['solution_id']}")
+                if element["file_name"] in existing_ids:
+                    pbar.set_description(f"Skipping {element['file_name']}")
                     pbar.update(1)
                     continue
 
-                pbar.set_description(f"Embedding {element['solution_id']}")
-                merged_content = element["description"] + element["solution"]
+                pbar.set_description(f"Embedding {element['file_name']}")
+                merged_content = element["code"] + element["query"]
                 cut_content = embedder.truncate_to_tokens(merged_content)  # 최대 토큰 길이로 자르기
                 array_data = [
-                    [element["solution_id"]],
-                    [element["problem_id"]],
-                    [element["description"]],
-                    [element["solution"]],
+                    [element["file_name"]],
+                    [element["line_count"]],
+                    [element["mark"]],
+                    [element["code"]],
+                    [element["query"]],
                     embedder.embed(cut_content)
                 ]
                 pbar.update(1)
                 milvusdb.ingest(collection, array_data)
     
 __all__ = [
-    "LeetCodeSolutionProvider"
+    "GithubProvider"
 ]
