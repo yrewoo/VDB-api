@@ -7,7 +7,6 @@ from pymilvus import (
     CollectionSchema,
     Collection,
 )
-from openai import OpenAI
 from dotenv import load_dotenv
 from src.util.logger import logger
 from fastapi.encoders import jsonable_encoder
@@ -56,18 +55,6 @@ class MilvusDB():
             collection.load()
             print(f"============= <Collection: {collection_name}> Created")
             return collection
-        except Exception as e:
-            logger.error(e)
-            raise e
-    
-    def embed(self, texts):
-        try:
-            client = OpenAI(api_key = self.api_key)
-            embeddings = client.embeddings.create(
-                input=texts,
-                model=self.embedding_model
-            )
-            return [x.embedding for x in embeddings.data]
         except Exception as e:
             logger.error(e)
             raise e

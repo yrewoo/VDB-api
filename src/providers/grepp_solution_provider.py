@@ -1,20 +1,20 @@
 import os
 from tqdm import tqdm
-from pymilvus import FieldSchema, DataType, utility
 
+from src.config import DIMENSION
 from src.milvus_router import MilvusDB
+from pymilvus import FieldSchema, DataType
+from src.util.embedding_model import embedder
 from src.providers.base_provider import BaseProvider
-from src.util.existing_checker import get_existing_solution_ids
 from src.util.token_cutter import truncate_to_tokens
+from src.util.existing_checker import get_existing_solution_ids
 
-DIMENSION = int(os.getenv("MILVUS_DIMENSION"))
 milvusdb = MilvusDB()
 
 class GreppSolutionProvider(BaseProvider):
     def __init__(self):
-        self.collection_name = "grepp_solution"
-        self.uid_field = "problem_id"
-
+        super().__init__(collection_name="grepp_solution", uid_field="problem_id")
+        
     def get_schema(self):
         fields = [
             FieldSchema(name='solution_id', dtype=DataType.INT64, is_primary=True),
@@ -53,7 +53,7 @@ class GreppSolutionProvider(BaseProvider):
                         [solution['challengeId']],  # problem_id
                         [solution['language']],
                         [solution['code']],
-                        milvusdb.embed(cut_content)
+                        embedder.embed(cut_content)
                     ]
                     milvusdb.ingest(collection, array_data)
                     pbar.update(1)

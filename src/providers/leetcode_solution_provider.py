@@ -1,19 +1,19 @@
 import os
 from tqdm import tqdm
+from src.config import DIMENSION
 from src.milvus_router import MilvusDB
-from pymilvus import FieldSchema, DataType, utility
+from pymilvus import FieldSchema, DataType
+from src.util.embedding_model import embedder
 from src.util.token_cutter import truncate_to_tokens
 from src.providers.base_provider import BaseProvider
 from src.util.existing_checker import get_existing_solution_ids
 
-DIMENSION = int(os.getenv("MILVUS_DIMENSION"))
 milvusdb = MilvusDB()
 
 class LeetCodeSolutionProvider(BaseProvider):
     def __init__(self):
-        self.collection_name = "leetcode_solution"
-        self.uid_field = "solution_id"
-
+        super().__init__(collection_name="leetcode_solution", uid_field="solution_id")
+        
     def get_schema(self):
         fields = [
             FieldSchema(name='solution_id', dtype=DataType.VARCHAR, max_length=6400, is_primary=True),
@@ -48,7 +48,7 @@ class LeetCodeSolutionProvider(BaseProvider):
                     [element["problem_id"]],
                     [element["description"]],
                     [element["solution"]],
-                    milvusdb.embed(cut_content)
+                    embedder.embed(cut_content)
                 ]
                 pbar.update(1)
                 milvusdb.ingest(collection, array_data)

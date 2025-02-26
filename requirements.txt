@@ -6,3 +6,4 @@ pymilvus
 openai
 tqdm
 tiktoken
+sentence-transformers

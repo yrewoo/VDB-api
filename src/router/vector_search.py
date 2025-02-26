@@ -1,11 +1,10 @@
 from src.util.logger import logger
 from src.milvus_router import MilvusDB
-from src.registry import ProviderRegistry
+from src.registry import registry
 from fastapi import APIRouter, Query
 
 router = APIRouter()
 milvus_client = MilvusDB()
-registry = ProviderRegistry()
 
 @router.get("/vector_search/")
 async def vector_search(

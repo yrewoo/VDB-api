@@ -1,12 +1,11 @@
 from src.util.logger import logger
 from src.milvus_router import MilvusDB
-from src.registry import ProviderRegistry
+from src.registry import registry
 
 from fastapi import APIRouter, Query
 
 router = APIRouter()
 milvus_client = MilvusDB()
-registry = ProviderRegistry()
 
 @router.get("/expr_search/")
 async def expr_search(

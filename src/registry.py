@@ -18,3 +18,5 @@ class ProviderRegistry:
 
     def get_provider(self, name):
         return self.providers.get(name)
+    
+registry = ProviderRegistry()
