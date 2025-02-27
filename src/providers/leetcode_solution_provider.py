@@ -2,6 +2,7 @@
 
 from tqdm import tqdm
 from src.config import DIMENSION
+from src.util.logger import logger
 from src.milvus_router import MilvusDB
 from pymilvus import FieldSchema, DataType
 from src.util.embedding_model import embedder
@@ -37,13 +38,16 @@ class LeetCodeSolutionProvider(BaseProvider):
             is_int=False)
 
         with tqdm(total=len(json_data)) as pbar:
+            logger.info("Start parsing data...")
             for element in json_data:
                 if element["solution_id"] in existing_ids:
                     pbar.set_description(f"Skipping {element['solution_id']}")
+                    logger.info(f"Skipping {element['solution_id']}")
                     pbar.update(1)
                     continue
 
                 pbar.set_description(f"Embedding {element['solution_id']}")
+                logger.info(f"Embedding {element['solution_id']}")
                 merged_content = element["description"] + element["solution"]
                 cut_content = embedder.truncate_to_tokens(merged_content)  # 최대 토큰 길이로 자르기
                 array_data = [
@@ -53,8 +57,9 @@ class LeetCodeSolutionProvider(BaseProvider):
                     [element["solution"]],
                     embedder.embed(cut_content)
                 ]
-                pbar.update(1)
                 milvusdb.ingest(collection, array_data)
+                pbar.update(1)
+        logger.info("Finish parsing data...")
     
 __all__ = [
     "LeetCodeSolutionProvider"

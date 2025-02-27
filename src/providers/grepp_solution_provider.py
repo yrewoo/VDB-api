@@ -2,6 +2,7 @@
 
 from tqdm import tqdm
 from src.config import DIMENSION
+from src.util.logger import logger
 from src.milvus_router import MilvusDB
 from pymilvus import FieldSchema, DataType
 from src.util.embedding_model import embedder
@@ -39,14 +40,17 @@ class GreppSolutionProvider(BaseProvider):
             is_int=True)
 
         with tqdm(total=len(data)) as pbar:
+            logger.info("Start parsing data...")
             for element in data:
                 solution_id = element["solution_id"]
                 if solution_id in existing_ids:
                     pbar.set_description(f"Skipping {solution_id}")
+                    logger.info(f"Skipping {solution_id}")
                     pbar.update(1)
                     continue
 
                 pbar.set_description(f"Embedding {solution_id}")
+                logger.info(f"Embedding {solution_id}")
                 merged_content = element["description"] + element["code"]
                 cut_content = embedder.truncate_to_tokens(merged_content)  # 최대 토큰 길이로 자르기
                 array_data = [
@@ -59,6 +63,8 @@ class GreppSolutionProvider(BaseProvider):
                 ]
                 milvusdb.ingest(collection, array_data)
                 pbar.update(1)
+        logger.info("Finish parsing data...")
+
         # collection = milvusdb.connect_collection(self.collection_name)
         # data = json_data['challenges']
         # existing_ids = get_existing_solution_ids(

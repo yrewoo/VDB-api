@@ -2,6 +2,7 @@
 
 from tqdm import tqdm
 from src.config import DIMENSION
+from src.util.logger import logger
 from src.milvus_router import MilvusDB
 from pymilvus import FieldSchema, DataType
 from src.util.embedding_model import embedder
@@ -38,13 +39,16 @@ class GithubProvider(BaseProvider):
             is_int=False)
         
         with tqdm(total=len(json_data)) as pbar:
+            logger.info("Start parsing data...")
             for element in json_data:
                 if element["file_name"] in existing_ids:
                     pbar.set_description(f"Skipping {element['file_name']}")
+                    logger.info(f"Skipping {element['file_name']}")
                     pbar.update(1)
                     continue
 
                 pbar.set_description(f"Embedding {element['file_name']}")
+                logger.info(f"Embedding {element['file_name']}")
                 merged_content = element["code"] + element["query"]
                 cut_content = embedder.truncate_to_tokens(merged_content)  # 최대 토큰 길이로 자르기
                 array_data = [
@@ -55,8 +59,9 @@ class GithubProvider(BaseProvider):
                     [element["query"]],
                     embedder.embed(cut_content)
                 ]
-                pbar.update(1)
                 milvusdb.ingest(collection, array_data)
+                pbar.update(1)
+        logger.info("End parsing data...")
     
 __all__ = [
     "GithubProvider"
