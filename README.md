@@ -21,7 +21,7 @@ $ docker-compose -f milvus.yml up -d
 # 2. Define the Collection Provider
 Before starting the API server, `{collection_name}_provider.py` under `./src/providers/` should be created.
 
-## 3. Start the API server
+# 3. Start the API server
 ```shell
 $ uvicorn src.main:app --host $HOST --port $PORT
 ```
