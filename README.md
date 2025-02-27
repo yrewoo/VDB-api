@@ -18,25 +18,19 @@ Set up Milvus connection config(e.g. host, port, ...) and OpenAI's API key (requ
 $ cd docker
 $ docker-compose -f milvus.yml up -d
 ```
-# 2. Initialize Database
-Before running, make sure that the Collection's Fields are defined in the form of `milvus/collection_name.py`. If necessary, you should add an initialization step for creating the collection in the `milvus/init.py` file. You can see DB GUI using `attu` (check endpoint at `docker/milvus.yml`)
+# 2. Define the Collection Provider
+Before starting the API server, `{collection_name}_provider.py` under `./src/providers/` should be created.
+
+## 3. Start the API server
 ```shell
-$ python milvus/init.py --collection "collection_name"
+$ uvicorn src.main:app --host $HOST --port $PORT
 ```
-# 3. Start Fast API
-```shell
-$ python main.py
-```
-You can use Swagger UI on `API_endpoint/docs` (e.g. `http://localhost:port/docs`).
+You can use Swagger UI on `API_endpoint/docs` (e.g. `http://$HOST:$PORT/docs`).
+
 ## 3-1. Upload data (`/upload`)
-The Upload API requires two input parameters: `collection_name` and `file`. 
+The Upload API requires two input parameters: `collection_name` and `file`. Uploading files is handled as a background task. To check the status of the job in the background after running the upload API, call the `/upload_status/` API.
 
-### !! Before uploading !!
-1. The collection must be created at vector database using initializing(step #2).
-2. The `process_file` function in `milvus/collection_name.py` must be defined to match the data structure of the JSON file.
-3. The `insert_data` function in `milvus/collection_router.py` must be defined to match the collection.
-
-## 3-2. Data Search (`/search_expr`)
+## 3-2. Data Search (`/expr_search`)
 ### Example 1 - Using cURL
 To retrieve data with problem_id 16769 from The Collection “grepp”, `expr` would be `problem_id==16769` as following:
 ```shell
