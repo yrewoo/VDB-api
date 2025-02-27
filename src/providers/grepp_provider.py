@@ -19,10 +19,10 @@ class GreppProvider(BaseProvider):
             FieldSchema(name='problem_id', dtype=DataType.INT64, is_primary=True),
             FieldSchema(name='title', dtype=DataType.VARCHAR, max_length=64000),
             FieldSchema(name='partTitle', dtype=DataType.VARCHAR, max_length=64000),
-            FieldSchema(name='languages', dtype=DataType.VARCHAR, max_length=1000),
+            FieldSchema(name='languages', dtype=DataType.VARCHAR, max_length=2400),
             FieldSchema(name='level', dtype=DataType.INT64),
             FieldSchema(name='description', dtype=DataType.VARCHAR, max_length=64000),
-            FieldSchema(name='testcases', dtype=DataType.VARCHAR, max_length=1000),
+            FieldSchema(name='testcases', dtype=DataType.VARCHAR, max_length=2400),
             FieldSchema(name='embedding', dtype=DataType.FLOAT_VECTOR, dim=DIMENSION),
         ]
         embed_field = 'embedding'
@@ -33,7 +33,8 @@ class GreppProvider(BaseProvider):
 
     def parse_data(self, json_data):
         collection = milvusdb.connect_collection(self.collection_name)
-        data = json_data['challenges']
+        # data = json_data['challenges']
+        data = json_data
         existing_ids = get_existing_solution_ids(
             collection, 
             self.uid_field, 
@@ -48,6 +49,7 @@ class GreppProvider(BaseProvider):
                     continue
 
                 pbar.set_description(f"Embedding {problem_id}")
+                cut_content = embedder.truncate_to_tokens(element["description"])  # 최대 토큰 길이로 자르기
                 array_data = [
                     [element['id']],                        # problem_id
                     [element['title']],                     # title
@@ -56,7 +58,7 @@ class GreppProvider(BaseProvider):
                     [element['level']],                     # level
                     [element['description']],               # description
                     [str(element['testcases'])],            # testcases
-                    embedder.embed(element["description"])  # embedding
+                    embedder.embed(cut_content)             # embedding
                 ]
                 milvusdb.ingest(collection, array_data)
                 pbar.update(1)
