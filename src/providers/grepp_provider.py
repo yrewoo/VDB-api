@@ -51,7 +51,7 @@ class GreppProvider(BaseProvider):
                 pbar.set_description(f"Embedding {problem_id}")
                 cut_content = embedder.truncate_to_tokens(element["description"])  # 최대 토큰 길이로 자르기
                 array_data = [
-                    [element['id']],                        # problem_id
+                    [problem_id],                        # problem_id
                     [element['title']],                     # title
                     [element['partTitle']],                 # partTitle
                     [str(element['languages'])],            # languages
