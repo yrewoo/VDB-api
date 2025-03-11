@@ -33,6 +33,7 @@ class EmbeddingGenerator:
             logger.error(f"❌ Error in truncate_to_tokens: {e}")
         
     def embed(self, text):
+        text = self.truncate_to_tokens(text)
         if EMBEDDING_MODEL == "text-embedding-3-small":
             response = self.model.embeddings.create(input=text, model=EMBEDDING_MODEL)
             return [x.embedding for x in response.data]

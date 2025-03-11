@@ -26,7 +26,8 @@ async def vector_search(
                                       output_fields=output_fields,
                                       top_k=limit,
                                       expr=expr)
-        logger.info(f"Retreived: {results[0]['id'], results[0]['distance']}")
+        logger.info(f"Retrieved: {[ (expr, res['id'], res['distance']) for res in results ]}")
+
         return {"total": len(results), "results": results}
     except Exception as e:
         logger.error(e)
