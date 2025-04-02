@@ -14,13 +14,13 @@ from src.util.embedding_model import embedder
 from fastapi.encoders import jsonable_encoder
 
 class MilvusDB():
-    def __init__(self, host=None, port=None):
-        load_dotenv(override=True)
+    def __init__(self, host=None, port=None, index_param=None, query_param=None):
+        # load_dotenv(override=True)
 
         self.host = host or os.getenv("MILVUS_HOST", "localhost")
         self.port = port or int(os.getenv("MILVUS_PORT", 19530))
-        self.index_param = json.loads(os.getenv("MILVUS_INDEX_PARAM"))
-        self.query_param = json.loads(os.getenv("MILVUS_QUERY_PARAM"))
+        self.index_param = index_param or json.loads(os.getenv("MILVUS_INDEX_PARAM"))
+        self.query_param = query_param or json.loads(os.getenv("MILVUS_QUERY_PARAM"))
 
     def list_collections(self):
         try:
@@ -50,9 +50,11 @@ class MilvusDB():
             
             schema = CollectionSchema(fields=fields, enable_dynamic_field=True)
             collection = Collection(name=f'{collection_name}', schema=schema)
+            collection.drop_index()
             collection.create_index(field_name=f"{embed_field}", index_params=self.index_param)
             collection.load()
             print(f"============= <Collection: {collection_name}> Created")
+            print(collection.index().params)
             return collection
         except Exception as e:
             logger.error(e)

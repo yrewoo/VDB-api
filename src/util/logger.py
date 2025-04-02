@@ -1,5 +1,6 @@
 import os
 import logging
+from datetime import datetime
 
 # 로그 디렉터리 생성
 LOG_DIR = "log"
@@ -7,7 +8,8 @@ if not os.path.exists(LOG_DIR):
     os.makedirs(LOG_DIR)
 
 # 로그 설정
-LOG_FILE = os.path.join(LOG_DIR, "app.log")
+exp_time = datetime.now().strftime("%Y%m%d%H")
+LOG_FILE = os.path.join(LOG_DIR, exp_time + ".log")
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(funcName)s - %(message)s"
 
 logging.basicConfig(

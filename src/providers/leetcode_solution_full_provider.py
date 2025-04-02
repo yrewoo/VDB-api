@@ -1,5 +1,4 @@
 # Leetcode Solution Provider
-
 import os
 import json
 from tqdm import tqdm
@@ -11,12 +10,14 @@ from src.util.embedding_model import embedder
 from src.providers.base_provider import BaseProvider
 from src.util.existing_checker import get_existing_solution_ids
 
-milvusdb = MilvusDB()
+MILVUS_INDEX_PARAM={"metric_type": "L2", "index_type": "HNSW", "params": {"M": 8, "efConstruction": 200}}
+
+milvusdb = MilvusDB(index_param=MILVUS_INDEX_PARAM)
 
 
-class LeetCodeSolutionProvider(BaseProvider):
+class LeetCodeSolutionFullProvider(BaseProvider):
     def __init__(self):
-        super().__init__(collection_name="leetcode_solution", uid_field="solution_id")
+        super().__init__(collection_name="leetcode_solution_full", uid_field="solution_id")
         
     def get_schema(self):
         fields = [
@@ -65,5 +66,5 @@ class LeetCodeSolutionProvider(BaseProvider):
         logger.info("Finish parsing data...")
     
 __all__ = [
-    "LeetCodeSolutionProvider"
+    "LeetCodeSolutionFullProvider"
 ]
