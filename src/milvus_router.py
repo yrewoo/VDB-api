@@ -50,7 +50,6 @@ class MilvusDB():
             
             schema = CollectionSchema(fields=fields, enable_dynamic_field=True)
             collection = Collection(name=f'{collection_name}', schema=schema)
-            collection.drop_index()
             collection.create_index(field_name=f"{embed_field}", index_params=self.index_param)
             collection.load()
             print(f"============= <Collection: {collection_name}> Created")
@@ -68,13 +67,14 @@ class MilvusDB():
             raise e
 
 
-    def query(self, collection_name, output_fields, expr, limit=1):
+    def query(self, collection_name, output_fields, expr, limit=1, offset=0):
         try:
             collection = self.connect_collection(collection_name=collection_name)
             result = collection.query(
                 expr=expr,
                 output_fields=output_fields,
                 limit=limit,
+                offset=offset
             )
 
             # ✅ numpy.float32 → float 변환 함수

@@ -16,7 +16,7 @@ for provider_name, provider in registry.providers.items():
         schema, embed_field = provider.get_schema()
         collection_name = provider_name.replace("_provider", "")
         print(f"🛠 Creating collection: {collection_name}")
-        milvus_client.create_collection(collection_name, schema, embed_field)
+        milvus_client.create_collection(collection_name, schema, embed_field, drop_existing=False)
 
 # 라우터 등록
 app.include_router(upload_router, prefix="/api")
