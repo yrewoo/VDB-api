@@ -1,1 +1,1 @@
-CUDA_VISIBLE_DEVICES=7 uvicorn src.main:app --host 0.0.0.0 --port 10001 --reload
+CUDA_VISIBLE_DEVICES=0 uvicorn src.main:app --host 0.0.0.0 --port 10001 --reload --reload-dir src
