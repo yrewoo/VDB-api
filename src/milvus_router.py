@@ -50,10 +50,21 @@ class MilvusDB():
             
             schema = CollectionSchema(fields=fields, enable_dynamic_field=True)
             collection = Collection(name=f'{collection_name}', schema=schema)
-            collection.create_index(field_name=f"{embed_field}", index_params=self.index_param)
+            if isinstance(embed_field, list):
+                for field in embed_field:
+                    collection.create_index(field_name=field, 
+                                            index_name=f"{field}_index",
+                                            index_params=self.index_param
+                                        )
+            else:
+                collection.create_index(field_name=embed_field, index_params=self.index_param)
+            
             collection.load()
             print(f"============= <Collection: {collection_name}> Created")
-            print(collection.index().params)
+            
+            if isinstance(embed_field, list):
+                for field in embed_field:
+                    print(collection.index(field_name=f"{field}", index_name=f"{field}_index").params)
             return collection
         except Exception as e:
             logger.error(e)

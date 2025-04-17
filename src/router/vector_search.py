@@ -10,6 +10,7 @@ milvus_client = MilvusDB()
 async def vector_search(
     collection_name: str, 
     text: str,
+    embed_field: str,
     limit: int = Query(default=1),
     expr: str = Query(default=None, description="Filtering expression")):
     try:
@@ -18,7 +19,7 @@ async def vector_search(
             logger.error(f"❌ Provider {collection_name}_provider not found")
             return
         
-        _, embed_field = provider.get_schema()
+        # _, embed_field = provider.get_schema()
         output_fields = provider.get_output_fields()
         results = milvus_client.search(collection_name=collection_name,
                                       data=text,
