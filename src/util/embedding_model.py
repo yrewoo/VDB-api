@@ -19,6 +19,17 @@ class EmbeddingGenerator:
             self.model = SentenceTransformer(EMBEDDING_MODEL)
             self.tokenizer = AutoTokenizer.from_pretrained(EMBEDDING_MODEL)
 
+    def truncate_to_max_length(self, text, max_len: int=65500):
+        if text is None:
+            return None
+        if not isinstance(text, str):
+            text = str(text)
+        b = text.encode("utf-8")
+        if len(b) <= max_len:
+            return text
+        # 경계에서 깨지는 멀티바이트 조각은 버림
+        return b[:max_len].decode("utf-8", errors="ignore")
+    
     def truncate_to_tokens(self, text, max_tokens=MAX_TOKENS[EMBEDDING_MODEL]):
         """텍스트를 모델의 최대 토큰 길이에 맞게 자름"""
         try:

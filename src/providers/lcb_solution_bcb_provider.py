@@ -26,11 +26,12 @@ class LCBSolutionBcbProvider(BaseProvider):
             FieldSchema(name='starter_code', dtype=DataType.VARCHAR, max_length=64000),
             FieldSchema(name='lcb_description', dtype=DataType.VARCHAR, max_length=64000),
             FieldSchema(name='bcb_description', dtype=DataType.VARCHAR, max_length=64000),
-            FieldSchema(name='solution', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='raw_solution', dtype=DataType.VARCHAR, max_length=64000),
+            FieldSchema(name='bcb_solution', dtype=DataType.VARCHAR, max_length=65000),
             FieldSchema(name='lcb_embedding', 
                         dtype=DataType.FLOAT_VECTOR, 
                         dim=DIMENSION,
-                        description="The embedding of the lcb_description and the solution"),
+                        description="The embedding of the {lcb_description + raw_solution}"),
             FieldSchema(name='bcb_embedding', 
                         dtype=DataType.FLOAT_VECTOR, 
                         dim=DIMENSION,
@@ -38,14 +39,21 @@ class LCBSolutionBcbProvider(BaseProvider):
             FieldSchema(name='bcb_sol_embedding', 
                         dtype=DataType.FLOAT_VECTOR, 
                         dim=DIMENSION,
-                        description="The embedding of the bcb_description and the solution"),
+                        description="The embedding of the {bcb_description + bcb_solution}"),
         ]
         embed_field = ['lcb_embedding', 'bcb_embedding', 'bcb_sol_embedding']
 
         return fields, embed_field
 
     def get_output_fields(self):
-        return ["solution_id", "problem_id", "starter_code", "lcb_description", "bcb_description", "solution"]
+        return ["solution_id", 
+                "problem_id", 
+                "starter_code", 
+                "lcb_description", 
+                "bcb_description", 
+                "raw_solution",
+                "bcb_solution",
+            ]
 
     def parse_data(self, json_data):
         collection = milvusdb.connect_collection(self.collection_name)
@@ -65,9 +73,9 @@ class LCBSolutionBcbProvider(BaseProvider):
 
                 pbar.set_description(f"Embedding {element['solution_id']}")
                 logger.info(f"Embedding {element['solution_id']}")
-                lcb_embed_content = element["lcb_description"] + element["solution"]
+                lcb_embed_content = element["lcb_description"] + element["raw_solution"]
                 bcb_embed_content = element["bcb_description"]
-                bcb_sol_embed_content = element["bcb_description"] + element["solution"]
+                bcb_sol_embed_content = element["bcb_description"] + element["bcb_solution"]
                 
                 lcb_embed_cut_content = embedder.truncate_to_tokens(lcb_embed_content)  # 최대 토큰 길이로 자르기
                 bcb_embed_cut_content = embedder.truncate_to_tokens(bcb_embed_content)  # 최대 토큰 길이로 자르기
@@ -79,7 +87,8 @@ class LCBSolutionBcbProvider(BaseProvider):
                     [element["starter_code"]],
                     [element["lcb_description"]],
                     [element["bcb_description"]],
-                    [element["solution"]],
+                    [element["raw_solution"]],
+                    [element["bcb_solution"]],
                     embedder.embed(lcb_embed_cut_content),
                     embedder.embed(bcb_embed_cut_content),
                     embedder.embed(bcb_sol_embed_cut_content)
